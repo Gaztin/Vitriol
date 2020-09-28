@@ -1,3 +1,3 @@
 settings = { }
-settings.workspace_name   = 'MyWorkspace'
-settings.bundle_namespace = 'com.gaztin'
+settings.workspace_name   = 'Vitriol'
+settings.bundle_namespace = 'com.gaztin.vitriol'

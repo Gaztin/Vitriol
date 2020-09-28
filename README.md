@@ -1,5 +1,5 @@
-# 🪁 Project
-Describe your project!
+# 🧪 Vitriol
+Vitriol is a web server and socket library in modern C++.
 
 ## <img src="https://premake.github.io/premake-logo.png" width=32 /> Premake
 This project uses Premake for project configuration. ([What is Premake?](https://github.com/premake/premake-core/wiki/What-Is-Premake))</br>
