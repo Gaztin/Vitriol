@@ -18,8 +18,10 @@
 #pragma once
 
 #include "Vitriol/Enums.h"
+#include "Vitriol/SocketConnection.h"
 #include "Vitriol/Vitriol.h"
 
+#include <optional>
 #include <string_view>
 
 namespace Vitriol
@@ -28,12 +30,27 @@ namespace Vitriol
 	{
 	public:
 
-		 Socket( AddressFamily address_family, SocketType socket_type );
+		 Socket( const Socket& ) = delete;
+		 Socket( Socket&& other );
+		 Socket( AddressFamily address_family, SocketType socket_type, Protocol protocol );
 		~Socket( void );
+
+		Socket& operator=( const Socket& ) = delete;
+		Socket& operator=( Socket&& other );
+
+	public:
+
+		bool                              Bind   ( uint16_t port );
+		bool                              Listen ( void );
+		std::optional< SocketConnection > Accept ( void );
 
 	private:
 
-		NativeSocketType native_handle_ = invalid_native_socket_v;
+		AddressFamily   address_family_ = AddressFamily::None;
+		SocketType      socket_type_    = SocketType::None;
+		Protocol        protocol_       = Protocol::None;
+		native_socket_t native_handle_  = invalid_native_socket_v;
+		addrinfo*       address_info_   = nullptr;
 
 	};
 }

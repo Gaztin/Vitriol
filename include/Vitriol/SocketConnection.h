@@ -17,30 +17,27 @@
 
 #pragma once
 
-#if defined( _WIN32 )
-  #include <WinSock2.h>
-  #define close closesocket
-#endif // _WIN32
+#include "Vitriol/Vitriol.h"
+
+#include <string>
 
 namespace Vitriol
 {
+	class SocketConnection
+	{
+	public:
 
-#if defined( _WIN32 )
+		SocketConnection( native_socket_t socket, const sockaddr_storage& address, int address_size );
 
-	using native_socket_t = SOCKET;
-	constexpr int             native_socket_error_v   = SOCKET_ERROR;
-	constexpr native_socket_t invalid_native_socket_v = INVALID_SOCKET;
+	public:
 
-	inline int GetLastSocketError( void ) { return WSAGetLastError(); }
+		std::string GetAddressString( void ) const;
 
-#else // _WIN32
+	private:
 
-	using native_socket_t = int;
-	constexpr int             native_socket_error_v   = -1;
-	constexpr native_socket_t invalid_native_socket_v = -1;
+		native_socket_t  native_socket_;
+		sockaddr_storage address_;
+		int              address_size_;
 
-	inline int GetLastSocketError( void ) { return errno; }
-
-#endif // _WIN32
-
+	};
 }

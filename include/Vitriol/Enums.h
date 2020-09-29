@@ -21,20 +21,33 @@
 
 namespace Vitriol
 {
-	enum class AddressFamily
+	enum class AddressFamily : int
 	{
-		Inet  = AF_INET,
-		Inet6 = AF_INET6,
-
-		// There are several more, but we only care about the internetwork families
+		None        = -1,
+		Unspecified = AF_UNSPEC,
+		Inet        = AF_INET,
+		Inet6       = AF_INET6,
 	};
 
-	enum class SocketType
+	enum class SocketType : int
 	{
+		None                     = -1,
 		Stream                   = SOCK_STREAM,
 		Datagram                 = SOCK_DGRAM,
 		Raw                      = SOCK_RAW,
 		ReliablyDeliveredMessage = SOCK_RDM,
 		SequencedPacketStream    = SOCK_SEQPACKET,
 	};
+
+	enum class Protocol : int
+	{
+		None = -1,
+		TCP  = IPPROTO_TCP,
+		UDP  = IPPROTO_UDP,
+	};
+
+	// For ease of use, unary plus (+) operator will perform a cast to underlying type
+	constexpr int operator+( AddressFamily address_family ) { return static_cast< int >( address_family ); }
+	constexpr int operator+( SocketType socket_type )       { return static_cast< int >( socket_type ); }
+	constexpr int operator+( Protocol protocol )            { return static_cast< int >( protocol ); }
 }

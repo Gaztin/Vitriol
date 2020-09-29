@@ -21,9 +21,23 @@
 
 int main( int /*argc*/, char* /*argv*/[] )
 {
-	Vitriol::Socket s( Vitriol::AddressFamily::Inet, Vitriol::SocketType::Stream );
+	Vitriol::Socket socket( Vitriol::AddressFamily::Inet, Vitriol::SocketType::Stream, Vitriol::Protocol::TCP );
 
-	std::cout << "Hello, world!\n";
+	// Bind and listen on socket
+	if( socket.Bind( 9182 ) && socket.Listen() )
+	{
+		std::cout << "Waiting for connections..\n";
+
+		// Wait for an incoming connection
+		if( auto incoming = socket.Accept() )
+		{
+			std::cout << "Incoming: " << incoming->GetAddressString() << "\n";
+		}
+	}
+
+	// Pause before exit
+	std::cout << "Press any key to exit.. ";
+	std::cin.get();
 
 	return 0;
 }

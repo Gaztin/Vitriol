@@ -14,7 +14,7 @@ function app( name )
 	assetdirs { 'src/%{prj.name}/Assets' }
 	debugdir 'src/%{prj.name}/Assets'
 	javadirs { 'src/%{prj.name}/Java' }
-	kind 'WindowedApp'
+	kind 'ConsoleApp'
 	links( libraries )
 	links( third_party_libraries )
 	location 'build/%{_ACTION}'

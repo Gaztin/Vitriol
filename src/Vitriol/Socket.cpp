@@ -17,9 +17,25 @@
 
 #include "Vitriol/Socket.h"
 
+#include <iostream>
+#include <string>
+
+#if defined( _WIN32 )
+  #include <WS2tcpip.h>
+  #include <WSPiApi.h>
+#endif // _WIN32
+
 using namespace Vitriol;
 
-Socket::Socket( AddressFamily address_family, SocketType socket_type )
+Socket::Socket( Socket&& other )
+{
+	*this = std::move( other );
+}
+
+Socket::Socket( AddressFamily address_family, SocketType socket_type, Protocol protocol )
+	: address_family_( address_family )
+	, socket_type_   ( socket_type )
+	, protocol_      ( protocol )
 {
 
 #if defined( _WIN32 )
@@ -28,20 +44,98 @@ Socket::Socket( AddressFamily address_family, SocketType socket_type )
 #endif // _WIN32
 
 	// Create socket
-	native_handle_ = socket( static_cast< int >( address_family )
-	                       , static_cast< int >( socket_type )
-	                       , 0
-	);
+	if( native_handle_ = socket( +address_family, +socket_type, +protocol ); native_handle_ == invalid_native_socket_v )
+	{
+		std::cerr << "socket failed (code " << GetLastSocketError() << ")\n";
+		return;
+	}
 }
 
 Socket::~Socket( void )
 {
+	// Clean up address info
+	if( address_info_ )
+		freeaddrinfo( address_info_ );
+
 	// Close socket
-	if( native_handle_ )
+	if( native_handle_ != invalid_native_socket_v )
 		close( native_handle_ );
 
 #if defined( _WIN32 )
 	WSACleanup();
 #endif // _WIN32
 
+}
+
+Socket& Socket::operator=( Socket&& other )
+{
+	address_family_ = other.address_family_;
+	socket_type_    = other.socket_type_;
+	protocol_       = other.protocol_;
+	native_handle_  = other.native_handle_;
+	address_info_   = other.address_info_;
+
+	other.address_family_ = AddressFamily::None;
+	other.socket_type_    = SocketType::None;
+	other.protocol_       = Protocol::None;
+	other.native_handle_  = invalid_native_socket_v;
+	other.address_info_   = nullptr;
+
+	return *this;
+}
+
+bool Socket::Bind( uint16_t port )
+{
+	const std::string port_string = std::to_string( port );
+
+	addrinfo hints { };
+	hints.ai_family   = +address_family_;
+	hints.ai_socktype = +socket_type_;
+	hints.ai_protocol = +protocol_;
+
+	// Get local address info
+	if( int result = getaddrinfo( "127.0.0.1", port_string.c_str(), &hints, &address_info_ ); result != 0 )
+	{
+		std::cerr << "getaddrinfo failed (code " << result << ")\n";
+		return false;
+	}
+
+	// Bind socket to local address and desired port
+	if( bind( native_handle_, address_info_->ai_addr, address_info_->ai_addrlen ) == native_socket_error_v )
+	{
+		std::cerr << "bind failed (code " << GetLastSocketError() << ")\n";
+		return false;
+	}
+
+	return true;
+}
+
+bool Socket::Listen( void )
+{
+	// Listen to socket
+	if( listen( native_handle_, SOMAXCONN ) == native_socket_error_v )
+	{
+		std::cerr << "listen failed (code " << GetLastSocketError() << ")\n";
+		return false;
+	}
+
+	return true;
+}
+
+std::optional< SocketConnection > Socket::Accept( void )
+{
+	sockaddr_storage addr { };
+	addr.ss_family = static_cast< uint16_t >( address_family_ );
+
+	int addr_size = sizeof( sockaddr_storage );
+
+	if( native_socket_t socket = accept( native_handle_, reinterpret_cast< sockaddr* >( &addr ), &addr_size ); socket == invalid_native_socket_v )
+	{
+		std::cerr << "accept failed (code " << GetLastSocketError() << ")\n";
+		return std::nullopt;
+	}
+	else
+	{
+		return std::make_optional< SocketConnection >( socket, addr, addr_size );
+	}
 }
