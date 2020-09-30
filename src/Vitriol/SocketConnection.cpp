@@ -26,11 +26,52 @@
 
 using namespace Vitriol;
 
+SocketConnection::SocketConnection( SocketConnection&& other )
+{
+	*this = std::move( other );
+}
+
 SocketConnection::SocketConnection( native_socket_t socket, const sockaddr_storage& address, int address_size )
 	: native_socket_( socket )
 	, address_      ( address )
 	, address_size_ ( address_size )
 {
+}
+
+SocketConnection::~SocketConnection( void )
+{
+	// Close socket connection
+	if( native_socket_ != invalid_native_socket_v )
+		close( native_socket_ );
+}
+
+SocketConnection& SocketConnection::operator=( SocketConnection&& other )
+{
+	native_socket_ = other.native_socket_;
+	memcpy( &address_, &other.address_, other.address_size_ );
+	address_size_  = other.address_size_;
+
+	other.native_socket_ = invalid_native_socket_v;
+	memset( &other.address_, 0, other.address_size_ );
+	other.address_size_  = 0;
+
+	return *this;
+}
+
+size_t SocketConnection::Receive( char* buf, size_t buf_size ) const
+{
+	if( int result = recv( native_socket_, buf, buf_size, 0 ); result > 0 )
+	{
+		return static_cast< size_t >( result );
+	}
+	else if( result == 0 )
+	{
+		return 0;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 std::string SocketConnection::GetAddressString( void ) const

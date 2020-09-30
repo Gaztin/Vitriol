@@ -31,7 +31,22 @@ int main( int /*argc*/, char* /*argv*/[] )
 		// Wait for an incoming connection
 		if( auto incoming = socket.Accept() )
 		{
-			std::cout << "Incoming: " << incoming->GetAddressString() << "\n";
+			const std::string address_string = incoming->GetAddressString();
+
+			std::cout << "Incoming: " << address_string << "\n";
+
+			constexpr size_t buf_size       = 512;
+			char             buf[ buf_size ];
+			size_t           bytes_received = 0;
+
+			while( ( bytes_received = incoming->Receive( buf, buf_size ) ) > 0 )
+			{
+				const std::string buf_string( buf, bytes_received );
+
+				std::cout << buf_string;
+			}
+
+			std::cout << "Closed " << address_string << "\n";
 		}
 	}
 

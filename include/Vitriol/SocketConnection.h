@@ -27,11 +27,18 @@ namespace Vitriol
 	{
 	public:
 
-		SocketConnection( native_socket_t socket, const sockaddr_storage& address, int address_size );
+		 SocketConnection( const SocketConnection& ) = delete;
+		 SocketConnection( SocketConnection&& other );
+		 SocketConnection( native_socket_t socket, const sockaddr_storage& address, int address_size );
+		~SocketConnection( void );
+
+		SocketConnection& operator=( const SocketConnection& ) = delete;
+		SocketConnection& operator=( SocketConnection&& other );
 
 	public:
 
-		std::string GetAddressString( void ) const;
+		size_t      Receive          ( char* buf, size_t buf_size ) const;
+		std::string GetAddressString ( void ) const;
 
 	private:
 
