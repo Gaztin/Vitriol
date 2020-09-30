@@ -52,24 +52,19 @@ void HttpServer::ThreadEntry( void )
 {
 	while( auto connection = socket_.Accept() )
 	{
-		const std::string address_string = connection->GetAddressString();
-
-		std::cout << "Connection: " << address_string << "\n";
-
-//////////////////////////////////////////////////////////////////////////
-
 		constexpr size_t buf_size = 512;
 		char             buf[ buf_size ];
 		size_t           bytes_read;
+		std::string      request_string;
 
 		while( ( bytes_read = connection->Receive( buf, buf_size ) ) > 0 )
 		{
-			const std::string buf_string( buf, bytes_read );
+			connection->SetBlocking( false );
 
-			std::cout << buf_string;
+			request_string.append( buf, bytes_read );
 		}
 
-		std::cout << "Closed: " << address_string << "\n";
+		std::cout << "Request from " << connection->GetAddressString() << ":\n" << request_string << "\n";
 	}
 
 	std::cout << "Done\n";

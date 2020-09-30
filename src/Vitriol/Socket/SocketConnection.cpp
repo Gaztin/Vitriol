@@ -58,6 +58,13 @@ SocketConnection& SocketConnection::operator=( SocketConnection&& other )
 	return *this;
 }
 
+void SocketConnection::SetBlocking( bool blocking )
+{
+	u_long nonblocking = !blocking;
+
+	ioctlsocket( native_socket_, FIONBIO, &nonblocking );
+}
+
 size_t SocketConnection::Receive( char* buf, size_t buf_size ) const
 {
 	if( int result = recv( native_socket_, buf, buf_size, 0 ); result > 0 )
