@@ -15,32 +15,39 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#include "Vitriol/Http/HttpServer.h"
+#pragma once
 
-#include <iostream>
+#include "Vitriol/Socket/Socket.h"
 
-int main( int /*argc*/, char* /*argv*/[] )
+#include <thread>
+#include <vector>
+
+namespace Vitriol
 {
-	Vitriol::HttpServer server;
-
-	// Start maximum amount of threads
-	server.StartThreads( std::thread::hardware_concurrency() );
-
-	while( server.IsRunning() )
+	class HttpServer
 	{
-		std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
-	}
+	public:
 
-	return 0;
+		HttpServer( const HttpServer& ) = delete;
+		HttpServer( HttpServer&& )      = default;
+		HttpServer( uint16_t port = 80 );
+
+		HttpServer& operator=( const HttpServer& ) = delete;
+		HttpServer& operator=( HttpServer&& )      = default;
+
+	public:
+
+		void StartThreads ( size_t thread_count );
+		bool IsRunning    ( void ) const;
+
+	private:
+
+		void ThreadEntry( void );
+
+	private:
+
+		Socket                     socket_;
+		std::vector< std::thread > threads_;
+
+	};
 }
-
-#if defined( _WIN32 )
-
-#include <Windows.h>
-
-int WINAPI WinMain( HINSTANCE /*instance*/, HINSTANCE /*prev_instance*/, LPSTR /*cmd_line*/, int /*cmd_show*/ )
-{
-	return main( __argc, __argv );
-}
-
-#endif // _WIN32
