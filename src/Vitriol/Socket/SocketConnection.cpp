@@ -15,7 +15,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#include "Vitriol/SocketConnection.h"
+#include "Vitriol/Socket/SocketConnection.h"
 
 #include "Vitriol/Enums.h"
 

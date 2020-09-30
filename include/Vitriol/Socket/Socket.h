@@ -17,8 +17,8 @@
 
 #pragma once
 
+#include "Vitriol/Socket/SocketConnection.h"
 #include "Vitriol/Enums.h"
-#include "Vitriol/SocketConnection.h"
 #include "Vitriol/Vitriol.h"
 
 #include <optional>
