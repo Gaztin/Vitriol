@@ -48,6 +48,11 @@ bool HttpServer::IsRunning( void ) const
 	return false;
 }
 
+void HttpServer::OnRequest( HttpRequest request )
+{
+	std::cout << "Request for endpoint: " << request.GetEndpoint() << "\n";
+}
+
 void HttpServer::ThreadEntry( void )
 {
 	while( auto connection = socket_.Accept() )
@@ -64,8 +69,69 @@ void HttpServer::ThreadEntry( void )
 			request_string.append( buf, bytes_read );
 		}
 
-		std::cout << "Request from " << connection->GetAddressString() << ":\n" << request_string << "\n";
+//////////////////////////////////////////////////////////////////////////
+
+		HttpRequest request = ParseRequest( request_string );
+
+		OnRequest( std::move( request ) );
+	}
+}
+
+HttpRequest HttpServer::ParseRequest( std::string_view data ) const
+{
+	size_t           newline_offset = data.find_first_of( '\n' );
+	std::string_view line           = data.substr( 0, newline_offset );
+
+	// Handle windows-style line endings
+	if( line.back() == '\r' )
+		line.remove_suffix( 1 );
+
+	// First line contains method, endpoint and protocol version
+	const size_t      first_space  = line.find_first_of( ' ' );
+	const size_t      second_space = line.find_first_of( ' ', first_space + 1 );
+	const HttpMethod  method       = HttpMethodFromString( line.substr( 0, first_space ) );
+	std::string       endpoint     = std::string( line.substr( first_space + 1, second_space - ( first_space + 1 ) ) );
+	const HttpVersion version      = HttpVersionFromString( line.substr( second_space + 1 ) );
+	HttpRequest       request      = HttpRequest( method, version, std::move( endpoint ) );
+
+	// Remaining lines contain metadata such as user agent and content type
+	while( !data.empty() )
+	{
+		data.remove_prefix( newline_offset + 1 );
+
+		newline_offset = data.find_first_of( '\n' );
+		line           = data.substr( 0, newline_offset );
+
+		// Handle windows-style line endings
+		if( line.back() == '\r' )
+			line.remove_suffix( 1 );
+
+		// Empty line means end of metadata
+		if( line.empty() )
+		{
+			data.remove_prefix( newline_offset + 1 );
+			break;
+		}
+
+//////////////////////////////////////////////////////////////////////////
+
+		// Header fields
+		const size_t colon_offset       = line.find_first_of( ':' );
+		std::string  key                = std::string( line.substr( 0, colon_offset ) );
+		const size_t value_start_offset = line.find_first_not_of( ' ', colon_offset + 1 );
+		std::string  value              = std::string( line.substr( value_start_offset ) );
+
+		// Set header field
+		request.AddHeaderField( std::move( key ), std::move( value ) );
 	}
 
-	std::cout << "Done\n";
+	// If there is still data left, that means we have a payload as well
+	if( !data.empty() )
+	{
+		std::string payload( data );
+
+		request.SetPayload( std::move( payload ) );
+	}
+
+	return request;
 }

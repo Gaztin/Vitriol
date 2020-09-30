@@ -17,44 +17,44 @@
 
 #pragma once
 
-#include "Vitriol/Http/HttpRequest.h"
-#include "Vitriol/Socket/Socket.h"
+#include "Vitriol/Enums.h"
 
-#include <thread>
-#include <vector>
+#include <string>
+#include <map>
 
 namespace Vitriol
 {
-	class HttpServer
+	class HttpRequest
 	{
 	public:
 
-		         HttpServer( const HttpServer& ) = delete;
-		         HttpServer( HttpServer&& )      = default;
-		         HttpServer( uint16_t port = 80 );
-		virtual ~HttpServer( void )              = default;
-
-		HttpServer& operator=( const HttpServer& ) = delete;
-		HttpServer& operator=( HttpServer&& )      = default;
+		using FieldMap = std::map< std::string, std::string >;
 
 	public:
 
-		void StartThreads ( size_t thread_count );
-		bool IsRunning    ( void ) const;
+		HttpRequest( HttpRequest&& other );
+		HttpRequest( const HttpRequest& other ) = default;
+		HttpRequest( HttpMethod method, HttpVersion version, std::string endpoint );
 
-	protected:
+		HttpRequest& operator=( const HttpRequest& other ) = default;
+		HttpRequest& operator=( HttpRequest&& other );
 
-		virtual void OnRequest( HttpRequest request );
+	public:
+
+		void SetPayload     ( std::string payload );
+		void AddHeaderField ( std::string key, std::string value );
+
+	public:
+
+		std::string_view GetEndpoint( void ) const { return endpoint_; }
 
 	private:
 
-		void        ThreadEntry  ( void );
-		HttpRequest ParseRequest ( std::string_view data ) const;
-
-	private:
-
-		Socket                     socket_;
-		std::vector< std::thread > threads_;
+		HttpMethod  method_;
+		HttpVersion version_;
+		std::string endpoint_;
+		std::string payload_;
+		FieldMap    header_fields_;
 
 	};
 }
