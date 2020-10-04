@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 #if defined( _WIN32 )
   #include <WinSock2.h>
   #define close closesocket
@@ -24,10 +27,12 @@
 
 namespace Vitriol
 {
+	using HttpFieldMap = std::unordered_map< std::string, std::string >;
 
 #if defined( _WIN32 )
 
 	using native_socket_t = SOCKET;
+
 	constexpr int             native_socket_error_v   = SOCKET_ERROR;
 	constexpr native_socket_t invalid_native_socket_v = INVALID_SOCKET;
 
@@ -36,6 +41,7 @@ namespace Vitriol
 #else // _WIN32
 
 	using native_socket_t = int;
+
 	constexpr int             native_socket_error_v   = -1;
 	constexpr native_socket_t invalid_native_socket_v = -1;
 

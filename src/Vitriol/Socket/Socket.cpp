@@ -28,8 +28,17 @@
 using namespace Vitriol;
 
 Socket::Socket( Socket&& other )
+: address_family_( other.address_family_ )
+, socket_type_   ( other.socket_type_ )
+, protocol_      ( other.protocol_ )
+, native_handle_ ( other.native_handle_ )
+, address_info_  ( other.address_info_ )
 {
-	*this = std::move( other );
+	other.address_family_ = AddressFamily::None;
+	other.socket_type_    = SocketType::None;
+	other.protocol_       = Protocol::None;
+	other.native_handle_  = invalid_native_socket_v;
+	other.address_info_   = nullptr;
 }
 
 Socket::Socket( AddressFamily address_family, SocketType socket_type, Protocol protocol )

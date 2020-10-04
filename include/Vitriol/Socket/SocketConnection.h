@@ -39,6 +39,7 @@ namespace Vitriol
 
 		void        SetBlocking      ( bool blocking );
 		size_t      Receive          ( char* buf, size_t buf_size ) const;
+		bool        Send             ( const char* buf, size_t buf_size ) const;
 		std::string GetAddressString ( void ) const;
 
 	private:

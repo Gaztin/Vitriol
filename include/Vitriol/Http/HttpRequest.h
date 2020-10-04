@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "Vitriol/Socket/SocketConnection.h"
 #include "Vitriol/Enums.h"
 
 #include <string>
@@ -24,6 +25,8 @@
 
 namespace Vitriol
 {
+	class HttpResponse;
+
 	class HttpRequest
 	{
 	public:
@@ -34,13 +37,14 @@ namespace Vitriol
 
 		HttpRequest( HttpRequest&& other );
 		HttpRequest( const HttpRequest& other ) = default;
-		HttpRequest( HttpMethod method, HttpVersion version, std::string endpoint );
+		HttpRequest( SocketConnection sender_connection, HttpMethod method, HttpVersion version, std::string endpoint );
 
 		HttpRequest& operator=( const HttpRequest& other ) = default;
 		HttpRequest& operator=( HttpRequest&& other );
 
 	public:
 
+		void Respond        ( const HttpResponse& response );
 		void SetPayload     ( std::string payload );
 		void AddHeaderField ( std::string key, std::string value );
 
@@ -50,11 +54,12 @@ namespace Vitriol
 
 	private:
 
-		HttpMethod  method_;
-		HttpVersion version_;
-		std::string endpoint_;
-		std::string payload_;
-		FieldMap    header_fields_;
+		SocketConnection sender_connection_;
+		HttpMethod       method_;
+		HttpVersion      version_;
+		std::string      endpoint_;
+		std::string      payload_;
+		FieldMap         header_fields_;
 
 	};
 }

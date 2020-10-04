@@ -18,6 +18,7 @@
 #pragma once
 
 #include "Vitriol/Http/HttpRequest.h"
+#include "Vitriol/Http/HttpResponse.h"
 #include "Vitriol/Socket/Socket.h"
 
 #include <thread>
@@ -49,7 +50,7 @@ namespace Vitriol
 	private:
 
 		void        ThreadEntry  ( void );
-		HttpRequest ParseRequest ( std::string_view data ) const;
+		HttpRequest ParseRequest ( SocketConnection connection, std::string_view data ) const;
 
 	private:
 

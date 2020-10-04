@@ -17,31 +17,51 @@
 
 #include "Vitriol/Http/HttpRequest.h"
 
+#include "Vitriol/Http/HttpResponse.h"
+
+#include <iostream>
+
 using namespace Vitriol;
 
 HttpRequest::HttpRequest( HttpRequest&& other )
+	: sender_connection_( std::move( other.sender_connection_ ) )
+	, method_           ( other.method_ )
+	, version_          ( other.version_ )
+	, endpoint_         ( std::move( other.endpoint_ ) )
+	, payload_          ( std::move( other.payload_ ) )
+	, header_fields_    ( std::move( other.header_fields_ ) )
 {
-	*this = std::move( other );
+	other.method_  = HttpMethod::None;
+	other.version_ = HttpVersion::None;
 }
 
-HttpRequest::HttpRequest( HttpMethod method, HttpVersion version, std::string endpoint )
-	: method_  ( method )
-	, version_ ( version )
-	, endpoint_( std::move( endpoint ) )
+HttpRequest::HttpRequest( SocketConnection sender_connection, HttpMethod method, HttpVersion version, std::string endpoint )
+	: sender_connection_( std::move( sender_connection ) )
+	, method_           ( method )
+	, version_          ( version )
+	, endpoint_         ( std::move( endpoint ) )
 {
 }
 
 HttpRequest& HttpRequest::operator=( HttpRequest&& other )
 {
-	method_        = other.method_;
-	version_       = other.version_;
-	endpoint_      = std::move( other.endpoint_ );
-	header_fields_ = std::move( other.header_fields_ );
+	sender_connection_ = std::move( other.sender_connection_ );
+	method_            = other.method_;
+	version_           = other.version_;
+	endpoint_          = std::move( other.endpoint_ );
+	header_fields_     = std::move( other.header_fields_ );
 
 	other.method_  = HttpMethod::None;
 	other.version_ = HttpVersion::None;
 
 	return *this;
+}
+
+void HttpRequest::Respond( const HttpResponse& response )
+{
+	const std::string data = response.GenerateData();
+
+	sender_connection_.Send( data.data(), data.size() );
 }
 
 void HttpRequest::SetPayload( std::string payload )

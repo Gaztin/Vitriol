@@ -71,13 +71,13 @@ void HttpServer::ThreadEntry( void )
 
 //////////////////////////////////////////////////////////////////////////
 
-		HttpRequest request = ParseRequest( request_string );
+		HttpRequest request = ParseRequest( std::move( *connection ), request_string );
 
 		OnRequest( std::move( request ) );
 	}
 }
 
-HttpRequest HttpServer::ParseRequest( std::string_view data ) const
+HttpRequest HttpServer::ParseRequest( SocketConnection connection, std::string_view data ) const
 {
 	size_t           newline_offset = data.find_first_of( '\n' );
 	std::string_view line           = data.substr( 0, newline_offset );
@@ -92,7 +92,7 @@ HttpRequest HttpServer::ParseRequest( std::string_view data ) const
 	const HttpMethod  method       = HttpMethodFromString( line.substr( 0, first_space ) );
 	std::string       endpoint     = std::string( line.substr( first_space + 1, second_space - ( first_space + 1 ) ) );
 	const HttpVersion version      = HttpVersionFromString( line.substr( second_space + 1 ) );
-	HttpRequest       request      = HttpRequest( method, version, std::move( endpoint ) );
+	HttpRequest       request      = HttpRequest( std::move( connection ), method, version, std::move( endpoint ) );
 
 	// Remaining lines contain metadata such as user agent and content type
 	while( !data.empty() )

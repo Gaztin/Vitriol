@@ -19,6 +19,8 @@
 
 #include "Vitriol/Enums.h"
 
+#include <iostream>
+
 #if defined( _WIN32 )
   #include <ws2ipdef.h>
   #include <WS2tcpip.h>
@@ -27,8 +29,13 @@
 using namespace Vitriol;
 
 SocketConnection::SocketConnection( SocketConnection&& other )
+: native_socket_( other.native_socket_ )
+, address_      ( other.address_ )
+, address_size_ ( other.address_size_ )
 {
-	*this = std::move( other );
+	other.native_socket_ = invalid_native_socket_v;
+	other.address_       = { };
+	other.address_size_  = 0;
 }
 
 SocketConnection::SocketConnection( native_socket_t socket, const sockaddr_storage& address, int address_size )
@@ -79,6 +86,17 @@ size_t SocketConnection::Receive( char* buf, size_t buf_size ) const
 	{
 		return 0;
 	}
+}
+
+bool SocketConnection::Send( const char* buf, size_t buf_size ) const
+{
+	if( send( native_socket_, buf, static_cast< int >( buf_size ), 0 ) == native_socket_error_v )
+	{
+		std::cout << "send failed (code " << GetLastSocketError() << ")\n";
+		return false;
+	}
+
+	return true;
 }
 
 std::string SocketConnection::GetAddressString( void ) const

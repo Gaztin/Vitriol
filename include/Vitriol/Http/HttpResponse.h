@@ -15,49 +15,44 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#include "Vitriol/Http/HttpServer.h"
+#pragma once
 
-#include <iostream>
+#include "Vitriol/Enums.h"
 
-class Server final : public Vitriol::HttpServer
+#include <string>
+
+namespace Vitriol
 {
-private:
-
-	void OnRequest( Vitriol::HttpRequest request ) override
+	class HttpResponse
 	{
-		if( request.GetEndpoint() == "/test" )
-		{
-			std::string           body = "Hello, world!";
-			Vitriol::HttpResponse response( 200, Vitriol::HttpVersion::V1_1, std::move( body ), "text/plain" );
+	public:
 
-			request.Respond( response );
-		}
-	}
+		HttpResponse( const HttpResponse& other ) = delete;
+		HttpResponse( HttpResponse&& );
+		HttpResponse( int code, HttpVersion version, std::string body = std::string(), std::string content_type = "text/plain" );
 
-};
+		HttpResponse& operator=( const HttpResponse& ) = delete;
+		HttpResponse& operator=( HttpResponse&& other );
 
-int main( int /*argc*/, char* /*argv*/[] )
-{
-	Server server;
+	public:
 
-	// Start maximum amount of threads
-	server.StartThreads( std::thread::hardware_concurrency() );
+		std::string      GenerateData   ( void ) const;
+		std::string_view GetHeaderField ( std::string_view key ) const;
+		void             SetHeaderField ( std::string_view key, std::string value );
 
-	while( server.IsRunning() )
-	{
-		std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
-	}
+	public:
 
-	return 0;
+		std::string_view GetBody( void ) const { return body_; }
+
+	private:
+
+		std::string  body_;
+		std::string  content_type_;
+
+		HttpFieldMap header_fields_;
+		HttpVersion  version_;
+
+		int          code_;
+
+	};
 }
-
-#if defined( _WIN32 )
-
-#include <Windows.h>
-
-int WINAPI WinMain( HINSTANCE /*instance*/, HINSTANCE /*prev_instance*/, LPSTR /*cmd_line*/, int /*cmd_show*/ )
-{
-	return main( __argc, __argv );
-}
-
-#endif // _WIN32
