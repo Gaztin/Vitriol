@@ -59,7 +59,7 @@ HttpRequest& HttpRequest::operator=( HttpRequest&& other )
 
 void HttpRequest::Respond( const HttpResponse& response )
 {
-	const std::string data = response.GenerateData();
+	const std::string data = response.GenerateData( version_ );
 
 	sender_connection_.Send( data.data(), data.size() );
 }

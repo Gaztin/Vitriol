@@ -25,17 +25,14 @@ HttpResponse::HttpResponse( HttpResponse&& other )
 	: body_         ( std::move( other.body_ ) )
 	, content_type_ ( std::move( other.content_type_ ) )
 	, header_fields_( std::move( other.header_fields_ ) )
-	, version_      ( other.version_ )
 	, code_         ( other.code_ )
 {
-	other.version_ = HttpVersion::None;
-	other.code_    = 0;
+	other.code_ = 0;
 }
 
-HttpResponse::HttpResponse( int code, HttpVersion version, std::string body, std::string content_type )
+HttpResponse::HttpResponse( int code, std::string body, std::string content_type )
 	: body_        ( std::move( body ) )
 	, content_type_( std::move( content_type ) )
-	, version_     ( version )
 	, code_        ( code )
 {
 	// Date field
@@ -65,16 +62,14 @@ HttpResponse& HttpResponse::operator=( HttpResponse&& other )
 	body_          = std::move( other.body_ );
 	content_type_  = std::move( other.content_type_ );
 	header_fields_ = std::move( other.header_fields_ );
-	version_       = other.version_;
 	code_          = other.code_;
 
-	other.version_ = HttpVersion::None;
-	other.code_    = 0;
+	other.code_ = 0;
 
 	return *this;
 }
 
-std::string HttpResponse::GenerateData( void ) const
+std::string HttpResponse::GenerateData( HttpVersion version ) const
 {
 	std::string result;
 
@@ -82,7 +77,7 @@ std::string HttpResponse::GenerateData( void ) const
 	result.reserve( 256 + body_.size() );
 
 	// First line is "<version> <code> <status>"
-	result += HttpVersionToString( version_ );
+	result += HttpVersionToString( version );
 	result += ' ';
 	result += std::to_string( code_ );
 	result += '\n';

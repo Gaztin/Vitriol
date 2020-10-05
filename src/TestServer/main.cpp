@@ -27,12 +27,21 @@ private:
 	{
 		if( request.GetEndpoint() == "/test" )
 		{
-			std::string           body = "Hello, world!";
-			Vitriol::HttpResponse response( 200, Vitriol::HttpVersion::V1_1, std::move( body ), "text/plain" );
+			std::string body;
+			body += "<body>";
+			body += "<h1>Hello, world!</h1>";
+			body += "<p>Count: " + std::to_string( count_++ ) + "</p>";
+			body += "</body>";
+
+			Vitriol::HttpResponse response( 200, std::move( body ), "text/html" );
 
 			request.Respond( response );
 		}
 	}
+
+private:
+
+	int count_ = 0;
 
 };
 

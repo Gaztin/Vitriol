@@ -29,14 +29,14 @@ namespace Vitriol
 
 		HttpResponse( const HttpResponse& other ) = delete;
 		HttpResponse( HttpResponse&& );
-		HttpResponse( int code, HttpVersion version, std::string body = std::string(), std::string content_type = "text/plain" );
+		HttpResponse( int code, std::string body = std::string(), std::string content_type = "text/plain" );
 
 		HttpResponse& operator=( const HttpResponse& ) = delete;
 		HttpResponse& operator=( HttpResponse&& other );
 
 	public:
 
-		std::string      GenerateData   ( void ) const;
+		std::string      GenerateData   ( HttpVersion version ) const;
 		std::string_view GetHeaderField ( std::string_view key ) const;
 		void             SetHeaderField ( std::string_view key, std::string value );
 
@@ -50,7 +50,6 @@ namespace Vitriol
 		std::string  content_type_;
 
 		HttpFieldMap header_fields_;
-		HttpVersion  version_;
 
 		int          code_;
 

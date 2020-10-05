@@ -30,6 +30,9 @@ filter 'system:windows'
 
 filter 'system:not windows'
 	toolset 'gcc'
+	defines {
+		'_CRT_SECURE_NO_WARNINGS',
+	}
 
 filter 'system:linux'
 	debugenvs { 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../%{OUTDIR}' }
