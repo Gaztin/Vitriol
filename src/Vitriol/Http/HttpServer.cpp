@@ -71,9 +71,12 @@ void HttpServer::ThreadEntry( void )
 
 //////////////////////////////////////////////////////////////////////////
 
-		HttpRequest request = ParseRequest( std::move( *connection ), request_string );
+		if( bytes_read > 0 )
+		{
+			HttpRequest request = ParseRequest( std::move( *connection ), request_string );
 
-		OnRequest( std::move( request ) );
+			OnRequest( std::move( request ) );
+		}
 	}
 }
 
