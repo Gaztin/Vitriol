@@ -72,7 +72,7 @@ void SocketConnection::SetBlocking( bool blocking )
 	ioctlsocket( native_socket_, FIONBIO, &nonblocking );
 }
 
-size_t SocketConnection::Receive( char* buf, size_t buf_size ) const
+size_t SocketConnection::Receive( char* buf, size_t buf_size, bool* connection_reset ) const
 {
 	if( int result = recv( native_socket_, buf, buf_size, 0 ); result > 0 )
 	{
@@ -80,10 +80,17 @@ size_t SocketConnection::Receive( char* buf, size_t buf_size ) const
 	}
 	else if( result == 0 )
 	{
+		if( connection_reset )
+			*connection_reset = true;
+
 		return 0;
 	}
 	else
 	{
+		// Socket is non-blocking and did not contain any data
+		if( int error = GetLastSocketError(); error != error_would_block_v )
+			std::cerr << "recv failed (code " << error << ")\n";
+
 		return 0;
 	}
 }
@@ -135,4 +142,10 @@ std::string SocketConnection::GetAddressString( void ) const
 	}
 
 	return result;
+}
+
+bool SocketConnection::operator==( const SocketConnection& other ) const
+{
+	return ( ( address_size_ == other.address_size_ ) &&
+	         ( std::memcmp( &address_, &other.address_, address_size_ ) == 0 ) );
 }

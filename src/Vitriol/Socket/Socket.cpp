@@ -142,7 +142,7 @@ std::optional< SocketConnection > Socket::Accept( void )
 	{
 		// EWOULDBLOCK means that this socket is nonblocking and didn't have any incoming connection
 		if( int error = GetLastSocketError(); error != error_would_block_v )
-			std::cerr << "accept failed (code " << GetLastSocketError() << ")\n";
+			std::cerr << "accept failed (code " << error << ")\n";
 
 		return std::nullopt;
 	}

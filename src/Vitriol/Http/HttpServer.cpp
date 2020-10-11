@@ -17,6 +17,7 @@
 
 #include "Vitriol/Http/HttpServer.h"
 
+#include <cassert>
 #include <iostream>
 
 using namespace Vitriol;
@@ -56,29 +57,34 @@ void HttpServer::OnRequest( HttpRequest request )
 
 void HttpServer::ThreadEntry( void )
 {
-	std::vector< SocketConnection > connections;
+	std::vector< std::reference_wrapper< SocketConnection > > thread_connections;
 
 	while( socket_.IsValid() )
 	{
 		while( auto connection = socket_.Accept() )
 		{
-			connection->SetBlocking( false );
-			connections.emplace_back( std::move( *connection ) );
+			std::scoped_lock lock( connections_mutex_ );
+
+			auto& connection_ref = all_connections_.emplace_back( std::move( *connection ) );
+			connection_ref.SetBlocking( false );
+
+			// Keep track of connections accepted by this thread
+			thread_connections.push_back( std::ref( connection_ref ) );
 		}
 
-		for( auto& connection : connections )
+		for( auto it = thread_connections.begin(); it != thread_connections.end(); )
 		{
-			constexpr size_t buf_size = 512;
-			char             buf[ buf_size ];
-			size_t           bytes_read;
-			std::string      request_string;
+			constexpr size_t  buf_size         = 512;
+			SocketConnection& connection       = *it;
+			char              buf[ buf_size ]  = { };
+			bool              connection_reset = false;
+			std::string       request_string;
+			size_t            bytes_read;
 
-			while( ( bytes_read = connection.Receive( buf, buf_size ) ) > 0 )
+			while( ( bytes_read = connection.Receive( buf, buf_size, &connection_reset ) ) > 0 )
 			{
 				request_string.append( buf, bytes_read );
 			}
-
-//////////////////////////////////////////////////////////////////////////
 
 			if( !request_string.empty() )
 			{
@@ -86,7 +92,26 @@ void HttpServer::ThreadEntry( void )
 
 				OnRequest( std::move( request ) );
 			}
+
+			if( connection_reset )
+			{
+				std::scoped_lock lock( connections_mutex_);
+				auto             all_it = std::find( all_connections_.begin(), all_connections_.end(), connection );
+
+				assert( all_it != all_connections_.end() );
+
+				// Untrack connection
+				all_connections_.erase( all_it );
+				it = thread_connections.erase( it );
+			}
+			else
+			{
+				++it;
+			}
 		}
+
+		// Keep CPU usage low
+		std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 	}
 }
 

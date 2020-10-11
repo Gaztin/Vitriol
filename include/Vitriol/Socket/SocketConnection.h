@@ -38,9 +38,13 @@ namespace Vitriol
 	public:
 
 		void        SetBlocking      ( bool blocking );
-		size_t      Receive          ( char* buf, size_t buf_size ) const;
+		size_t      Receive          ( char* buf, size_t buf_size, bool* connection_reset ) const;
 		bool        Send             ( const char* buf, size_t buf_size ) const;
 		std::string GetAddressString ( void ) const;
+
+	public:
+
+		bool operator==( const SocketConnection& other ) const;
 
 	private:
 
