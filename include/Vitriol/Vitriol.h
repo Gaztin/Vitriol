@@ -35,6 +35,7 @@ namespace Vitriol
 
 	constexpr int             native_socket_error_v   = SOCKET_ERROR;
 	constexpr native_socket_t invalid_native_socket_v = INVALID_SOCKET;
+	constexpr int             error_would_block_v     = WSAEWOULDBLOCK;
 
 	inline int GetLastSocketError( void ) { return WSAGetLastError(); }
 
@@ -44,6 +45,7 @@ namespace Vitriol
 
 	constexpr int             native_socket_error_v   = -1;
 	constexpr native_socket_t invalid_native_socket_v = -1;
+	constexpr int             error_would_block_v     = EWOULDBLOCK;
 
 	inline int GetLastSocketError( void ) { return errno; }
 

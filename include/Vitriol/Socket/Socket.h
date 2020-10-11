@@ -40,9 +40,14 @@ namespace Vitriol
 
 	public:
 
-		bool                              Bind   ( uint16_t port );
-		bool                              Listen ( void );
-		std::optional< SocketConnection > Accept ( void );
+		bool                              Bind        ( uint16_t port );
+		bool                              Listen      ( void );
+		std::optional< SocketConnection > Accept      ( void );
+		void                              SetBlocking ( bool blocking );
+
+	public:
+
+		bool IsValid( void ) const { return native_handle_ != invalid_native_socket_v; }
 
 	private:
 

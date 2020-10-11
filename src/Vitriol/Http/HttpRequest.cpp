@@ -35,7 +35,7 @@ HttpRequest::HttpRequest( HttpRequest&& other )
 	other.version_ = HttpVersion::None;
 }
 
-HttpRequest::HttpRequest( SocketConnection sender_connection, HttpMethod method, HttpVersion version, std::string endpoint )
+HttpRequest::HttpRequest( std::reference_wrapper< SocketConnection > sender_connection, HttpMethod method, HttpVersion version, std::string endpoint )
 	: sender_connection_( std::move( sender_connection ) )
 	, method_           ( method )
 	, version_          ( version )
@@ -59,9 +59,10 @@ HttpRequest& HttpRequest::operator=( HttpRequest&& other )
 
 void HttpRequest::Respond( const HttpResponse& response )
 {
-	const std::string data = response.GenerateData( version_ );
+	const std::string data       = response.GenerateData( version_ );
+	SocketConnection& connection = sender_connection_;
 
-	sender_connection_.Send( data.data(), data.size() );
+	connection.Send( data.data(), data.size() );
 }
 
 void HttpRequest::SetPayload( std::string payload )

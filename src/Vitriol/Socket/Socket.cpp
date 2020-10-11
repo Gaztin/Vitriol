@@ -140,11 +140,21 @@ std::optional< SocketConnection > Socket::Accept( void )
 
 	if( native_socket_t socket = accept( native_handle_, reinterpret_cast< sockaddr* >( &addr ), &addr_size ); socket == invalid_native_socket_v )
 	{
-		std::cerr << "accept failed (code " << GetLastSocketError() << ")\n";
+		// EWOULDBLOCK means that this socket is nonblocking and didn't have any incoming connection
+		if( int error = GetLastSocketError(); error != error_would_block_v )
+			std::cerr << "accept failed (code " << GetLastSocketError() << ")\n";
+
 		return std::nullopt;
 	}
 	else
 	{
 		return std::make_optional< SocketConnection >( socket, addr, addr_size );
 	}
+}
+
+void Socket::SetBlocking( bool blocking )
+{
+	u_long nonblocking = !blocking;
+
+	ioctlsocket( native_handle_, FIONBIO, &nonblocking );
 }

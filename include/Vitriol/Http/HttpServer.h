@@ -50,7 +50,7 @@ namespace Vitriol
 	private:
 
 		void        ThreadEntry  ( void );
-		HttpRequest ParseRequest ( SocketConnection connection, std::string_view data ) const;
+		HttpRequest ParseRequest ( std::reference_wrapper< SocketConnection > connection, std::string_view data ) const;
 
 	private:
 

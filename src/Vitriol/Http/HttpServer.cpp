@@ -27,6 +27,7 @@ HttpServer::HttpServer( uint16_t port )
 	// Bind and listen on socket
 	socket_.Bind( port );
 	socket_.Listen();
+	socket_.SetBlocking( false );
 }
 
 void HttpServer::StartThreads( size_t thread_count )
@@ -55,32 +56,41 @@ void HttpServer::OnRequest( HttpRequest request )
 
 void HttpServer::ThreadEntry( void )
 {
-	while( auto connection = socket_.Accept() )
-	{
-		constexpr size_t buf_size = 512;
-		char             buf[ buf_size ];
-		size_t           bytes_read;
-		std::string      request_string;
+	std::vector< SocketConnection > connections;
 
-		while( ( bytes_read = connection->Receive( buf, buf_size ) ) > 0 )
+	while( socket_.IsValid() )
+	{
+		while( auto connection = socket_.Accept() )
 		{
 			connection->SetBlocking( false );
-
-			request_string.append( buf, bytes_read );
+			connections.emplace_back( std::move( *connection ) );
 		}
+
+		for( auto& connection : connections )
+		{
+			constexpr size_t buf_size = 512;
+			char             buf[ buf_size ];
+			size_t           bytes_read;
+			std::string      request_string;
+
+			while( ( bytes_read = connection.Receive( buf, buf_size ) ) > 0 )
+			{
+				request_string.append( buf, bytes_read );
+			}
 
 //////////////////////////////////////////////////////////////////////////
 
-		if( bytes_read > 0 )
-		{
-			HttpRequest request = ParseRequest( std::move( *connection ), request_string );
+			if( !request_string.empty() )
+			{
+				HttpRequest request = ParseRequest( std::ref( connection ), request_string );
 
-			OnRequest( std::move( request ) );
+				OnRequest( std::move( request ) );
+			}
 		}
 	}
 }
 
-HttpRequest HttpServer::ParseRequest( SocketConnection connection, std::string_view data ) const
+HttpRequest HttpServer::ParseRequest( std::reference_wrapper< SocketConnection > connection, std::string_view data ) const
 {
 	size_t           newline_offset = data.find_first_of( '\n' );
 	std::string_view line           = data.substr( 0, newline_offset );
