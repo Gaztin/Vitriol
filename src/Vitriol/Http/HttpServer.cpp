@@ -49,6 +49,13 @@ bool HttpServer::IsRunning( void ) const
 	return false;
 }
 
+size_t HttpServer::GetNumConnections( void )
+{
+	std::scoped_lock lock( connections_mutex_);
+
+	return all_connections_.size();
+}
+
 void HttpServer::OnRequest( HttpRequest request )
 {
 	std::cout << "Request for endpoint: " << request.GetEndpoint() << "\n";

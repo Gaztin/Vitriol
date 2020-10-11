@@ -54,6 +54,8 @@ int main( int /*argc*/, char* /*argv*/[] )
 
 	while( server.IsRunning() )
 	{
+		std::cout << "Number of connections: " << server.GetNumConnections() << "!\r";
+
 		std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 	}
 

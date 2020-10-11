@@ -42,8 +42,9 @@ namespace Vitriol
 
 	public:
 
-		void StartThreads ( size_t thread_count );
-		bool IsRunning    ( void ) const;
+		void   StartThreads      ( size_t thread_count );
+		bool   IsRunning         ( void ) const;
+		size_t GetNumConnections ( void );
 
 	protected:
 
