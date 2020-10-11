@@ -82,8 +82,8 @@ void HttpServer::ThreadEntry( void )
 		{
 			constexpr size_t  buf_size         = 512;
 			SocketConnection& connection       = *it;
-			char              buf[ buf_size ]  = { };
 			bool              connection_reset = false;
+			char              buf[ buf_size ];
 			std::string       request_string;
 			size_t            bytes_read;
 
