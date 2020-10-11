@@ -89,7 +89,12 @@ size_t SocketConnection::Receive( char* buf, size_t buf_size, bool* connection_r
 	{
 		// Socket is non-blocking and did not contain any data
 		if( int error = GetLastSocketError(); error != error_would_block_v )
+		{
+			if( connection_reset )
+				*connection_reset = true;
+
 			std::cerr << "recv failed (code " << error << ")\n";
+		}
 
 		return 0;
 	}
