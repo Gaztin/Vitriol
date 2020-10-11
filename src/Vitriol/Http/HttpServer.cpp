@@ -28,7 +28,6 @@ HttpServer::HttpServer( uint16_t port )
 	// Bind and listen on socket
 	socket_.Bind( port );
 	socket_.Listen();
-	socket_.SetBlocking( false );
 }
 
 void HttpServer::StartThreads( size_t thread_count )

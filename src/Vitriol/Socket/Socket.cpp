@@ -133,6 +133,20 @@ bool Socket::Listen( void )
 
 std::optional< SocketConnection > Socket::Accept( void )
 {
+	fd_set set;
+	set.fd_count      = 1;
+	set.fd_array[ 0 ] = native_handle_;
+
+	timeval timeout;
+	timeout.tv_sec  = 0;
+	timeout.tv_usec = 0;
+
+	// Check if socket is ready for read
+	if( select( native_handle_, &set, nullptr, nullptr, &timeout ) != 1 )
+		return std::nullopt;
+
+//////////////////////////////////////////////////////////////////////////
+
 	sockaddr_storage addr { };
 	addr.ss_family = static_cast< uint16_t >( address_family_ );
 
