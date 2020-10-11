@@ -21,6 +21,7 @@
 #include "Vitriol/Http/HttpResponse.h"
 #include "Vitriol/Socket/Socket.h"
 
+#include <list>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -55,10 +56,10 @@ namespace Vitriol
 
 	private:
 
-		Socket                          socket_;
-		std::vector< std::thread >      threads_;
-		std::vector< SocketConnection > all_connections_;
-		std::mutex                      connections_mutex_;
+		Socket                        socket_;
+		std::vector< std::thread >    threads_;
+		std::list< SocketConnection > all_connections_;
+		std::mutex                    connections_mutex_;
 
 	};
 }
