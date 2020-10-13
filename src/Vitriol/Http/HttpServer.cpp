@@ -56,11 +56,6 @@ size_t HttpServer::GetNumConnections( void )
 	return all_connections_.size();
 }
 
-void HttpServer::OnRequest( HttpRequest request )
-{
-	std::cout << "Request for endpoint: " << request.GetEndpoint() << "\n";
-}
-
 void HttpServer::ThreadEntry( void )
 {
 	std::vector< std::reference_wrapper< SocketConnection > > thread_connections;
@@ -70,6 +65,8 @@ void HttpServer::ThreadEntry( void )
 		while( auto connection = socket_.Accept() )
 		{
 			std::scoped_lock lock( connections_mutex_ );
+
+			std::cout << "Connection: " << connection->GetAddressString() << "\n";
 
 			auto& connection_ref = all_connections_.emplace_back( std::move( *connection ) );
 			connection_ref.SetBlocking( false );
@@ -105,6 +102,8 @@ void HttpServer::ThreadEntry( void )
 				auto             all_it = std::find( all_connections_.begin(), all_connections_.end(), connection );
 
 				assert( all_it != all_connections_.end() );
+
+				std::cout << "Disconnecting: " << all_it->GetAddressString() << "\n";
 
 				// Untrack connection
 				all_connections_.erase( all_it );

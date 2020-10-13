@@ -37,7 +37,7 @@ namespace Vitriol
 
 		HttpRequest( HttpRequest&& other );
 		HttpRequest( const HttpRequest& other ) = default;
-		HttpRequest( std::reference_wrapper< SocketConnection > sender_connection, HttpMethod method, HttpVersion version, std::string endpoint );
+		HttpRequest( std::reference_wrapper< SocketConnection > sender_connection, HttpMethod method, HttpVersion version, std::string uri );
 
 		HttpRequest& operator=( const HttpRequest& other ) = default;
 		HttpRequest& operator=( HttpRequest&& other );
@@ -50,14 +50,16 @@ namespace Vitriol
 
 	public:
 
-		std::string_view GetEndpoint( void ) const { return endpoint_; }
+		std::string_view GetURI   ( void ) const { return uri_; }
+		std::string_view GetPath  ( void ) const;
+		std::string_view GetQuery ( std::string_view key ) const;
 
 	private:
 
 		std::reference_wrapper< SocketConnection > sender_connection_;
 		HttpMethod                                 method_;
 		HttpVersion                                version_;
-		std::string                                endpoint_;
+		std::string                                uri_;
 		std::string                                payload_;
 		FieldMap                                   header_fields_;
 

@@ -27,7 +27,7 @@ HttpRequest::HttpRequest( HttpRequest&& other )
 	: sender_connection_( std::move( other.sender_connection_ ) )
 	, method_           ( other.method_ )
 	, version_          ( other.version_ )
-	, endpoint_         ( std::move( other.endpoint_ ) )
+	, uri_              ( std::move( other.uri_ ) )
 	, payload_          ( std::move( other.payload_ ) )
 	, header_fields_    ( std::move( other.header_fields_ ) )
 {
@@ -35,11 +35,11 @@ HttpRequest::HttpRequest( HttpRequest&& other )
 	other.version_ = HttpVersion::None;
 }
 
-HttpRequest::HttpRequest( std::reference_wrapper< SocketConnection > sender_connection, HttpMethod method, HttpVersion version, std::string endpoint )
+HttpRequest::HttpRequest( std::reference_wrapper< SocketConnection > sender_connection, HttpMethod method, HttpVersion version, std::string uri )
 	: sender_connection_( std::move( sender_connection ) )
 	, method_           ( method )
 	, version_          ( version )
-	, endpoint_         ( std::move( endpoint ) )
+	, uri_              ( std::move( uri ) )
 {
 }
 
@@ -48,7 +48,7 @@ HttpRequest& HttpRequest::operator=( HttpRequest&& other )
 	sender_connection_ = std::move( other.sender_connection_ );
 	method_            = other.method_;
 	version_           = other.version_;
-	endpoint_          = std::move( other.endpoint_ );
+	uri_               = std::move( other.uri_ );
 	header_fields_     = std::move( other.header_fields_ );
 
 	other.method_  = HttpMethod::None;
@@ -73,4 +73,45 @@ void HttpRequest::SetPayload( std::string payload )
 void HttpRequest::AddHeaderField( std::string key, std::string value )
 {
 	header_fields_.try_emplace( std::move( key ), std::move( value ) );
+}
+
+std::string_view HttpRequest::GetPath( void ) const
+{
+	std::string_view uri_view = uri_;
+	size_t           offset   = uri_view.find_first_of( "?#" );
+
+	return uri_view.substr( 0, offset );
+}
+
+std::string_view HttpRequest::GetQuery( std::string_view wanted_key ) const
+{
+	std::string_view uri_view = uri_;
+
+	if( const size_t query_offset = uri_view.find_first_of( '?' ); query_offset != std::string_view::npos )
+	{
+		for( size_t offset = query_offset; offset != std::string_view::npos; )
+		{
+			++offset;
+
+			if( size_t equal_offset = uri_view.find_first_of( '=', offset ); equal_offset != std::string_view::npos )
+			{
+				const size_t           key_length = equal_offset - offset;
+				const std::string_view key        = uri_view.substr( offset, key_length );
+				offset                            = equal_offset + 1;
+				const size_t           and_offset = uri_view.find_first_of( '&', offset );
+
+				if( key == wanted_key )
+				{
+					const size_t value_offset = equal_offset + 1;
+
+					if( and_offset == std::string_view::npos ) { return uri_view.substr( offset ); }
+					else                                       { return uri_view.substr( offset, and_offset - offset ); }
+				}
+
+				offset = and_offset;
+			}
+		}
+	}
+
+	return std::string_view();
 }

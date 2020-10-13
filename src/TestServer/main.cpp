@@ -25,18 +25,45 @@ private:
 
 	void OnRequest( Vitriol::HttpRequest request ) override
 	{
-		if( request.GetEndpoint() == "/test" )
+		std::string_view path = request.GetPath();
+		std::string      response_body;
+
+		std::cout << "Request: '" << path << "'\n";
+
+		response_body += "<body>";
+
+		if( path == "/test" )
 		{
-			std::string body;
-			body += "<body>";
-			body += "<h1>Hello, world!</h1>";
-			body += "<p>Count: " + std::to_string( count_++ ) + "</p>";
-			body += "</body>";
-
-			Vitriol::HttpResponse response( 200, std::move( body ), "text/html" );
-
-			request.Respond( response );
+			response_body += "<h1>Hello, world!</h1>";
+			response_body += "<p>Count: " + std::to_string( count_++ ) + "</p>";
 		}
+		else if( path == "/button" )
+		{
+			response_body += R"(<form action="/form" method="get" id="button_form">)";
+			response_body += R"(<label for="fname">First name:</label>)";
+			response_body += R"(<input type="text" id="fname" name="fname"><br><br>)";
+			response_body += R"(<label for="lname">Last name:</label>)";
+			response_body += R"(<input type="text" id="lname" name="lname">)";
+			response_body += R"(</form>)";
+			response_body += R"(<button type="submit" form="button_form">Submit</button>)";
+		}
+		else if( path == "/form" )
+		{
+			response_body += "<p>";
+			response_body += "Welcome, ";
+			response_body += request.GetQuery( "fname" );
+			response_body += ' ';
+			response_body += request.GetQuery( "lname" );
+			response_body += "!</p>";
+		}
+		else
+		{
+			response_body += "<p>Unhandled endpoint</p>";
+		}
+
+		response_body += "</body>";
+
+		request.Respond( Vitriol::HttpResponse( 200, std::move( response_body ), "text/html" ) );
 	}
 
 private:
@@ -54,7 +81,11 @@ int main( int /*argc*/, char* /*argv*/[] )
 
 	while( server.IsRunning() )
 	{
-		std::cout << "Number of connections: " << server.GetNumConnections() << "!\r";
+
+	#if defined( _WIN32 )
+		std::string console_title = "Number of connections: " + std::to_string( server.GetNumConnections() );
+		SetConsoleTitleA( console_title.c_str() );
+	#endif // _WIN32
 
 		std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 	}

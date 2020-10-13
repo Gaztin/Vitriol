@@ -48,7 +48,7 @@ namespace Vitriol
 
 	protected:
 
-		virtual void OnRequest( HttpRequest request );
+		virtual void OnRequest( HttpRequest request ) = 0;
 
 	private:
 
